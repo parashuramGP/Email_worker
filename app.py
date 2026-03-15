@@ -19,7 +19,17 @@ from spam_detector import SpamDetector
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("FLASK_SECRET_KEY", "cleanmail-secret-2024")
+
+_secret = os.environ.get("FLASK_SECRET_KEY")
+if not _secret:
+    raise RuntimeError("FLASK_SECRET_KEY environment variable is not set. "
+                       "Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\"")
+app.secret_key = _secret
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+# Enable secure cookies when running behind HTTPS (set HTTPS=1 in production)
+if os.environ.get("HTTPS"):
+    app.config["SESSION_COOKIE_SECURE"] = True
 
 # per-session email cache  { session_id -> [email_dict, ...] }
 _caches: dict[str, list] = {}
@@ -352,6 +362,7 @@ def chat():
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    print("\n  Clean Mail — Web UI")
-    print("  Open: http://localhost:5000\n")
-    app.run(debug=False, port=5000, threaded=True)
+    port = int(os.environ.get("PORT", 5000))
+    print(f"\n  Clean Mail — Web UI")
+    print(f"  Open: http://0.0.0.0:{port}\n")
+    app.run(debug=False, host="0.0.0.0", port=port, threaded=True)
