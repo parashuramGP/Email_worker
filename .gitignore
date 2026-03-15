@@ -1,0 +1,6 @@
+.env
+aws_key_pair.pem
+__pycache__/
+*.pyc
+*.pyo
+.claude/
